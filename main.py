@@ -41,7 +41,7 @@ while True:
             spot_crop = frame[y1:y1+h, x1:x1+w, :]
             diffs[spot_indx] = calc_diff(spot_crop, previous_frame[y1:y1+h, x1:x1+w, :])
 
-        # Optional: print sorted diffs for debugging
+        #  print sorted diffs for debugging
         print([diffs[j] for j in np.argsort(diffs)][::-1])
 
     # Determine which spots to process
