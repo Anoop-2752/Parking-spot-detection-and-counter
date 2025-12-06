@@ -15,7 +15,7 @@ It works with:
 - Live camera streams  
 
 The system highlights each parking slot and displays live counters for occupied vs available spaces.
-
+<img width="935" height="503" alt="Image" src="https://github.com/user-attachments/assets/0cf74a67-3e76-4cba-b740-b227512ad0d5" />
 
 ---
 
