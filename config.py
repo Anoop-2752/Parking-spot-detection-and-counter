@@ -24,3 +24,6 @@ RECT_THICKNESS = 2
 COUNTER_BG_RECT = ((80, 20), (550, 80))
 COUNTER_FONT_SCALE = 1
 COUNTER_COLOR = (255, 255, 255)
+
+# ── Web streaming ─────────────────────────────────────────────
+JPEG_QUALITY = 80

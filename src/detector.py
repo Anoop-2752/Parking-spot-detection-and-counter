@@ -9,7 +9,7 @@ import time
 import cv2
 import numpy as np
 
-from config import DIFF_THRESHOLD, FRAME_STEP
+from config import DIFF_THRESHOLD, FRAME_STEP, JPEG_QUALITY
 from src.classifier import is_empty, load_model
 from src.spot_extractor import extract_spots, load_mask
 from src.visualizer import draw_counter, draw_fps, draw_spots
@@ -33,6 +33,7 @@ class ParkingDetector:
         self.diffs = [0.0] * self.num_spots
         self.previous_frame = None
         self.frame_num = 0
+        self.fps = 0.0
 
     def _calc_diff(self, crop, prev_crop):
         """Mean absolute difference between two image crops."""
@@ -120,3 +121,53 @@ class ParkingDetector:
         finally:
             cap.release()
             cv2.destroyAllWindows()
+
+    def process_frames(self):
+        """Generator that yields JPEG-encoded frames for web streaming."""
+        cap = self._open_video()
+        prev_time = time.time()
+
+        try:
+            while True:
+                ret, frame = cap.read()
+
+                if not ret:
+                    if self.loop:
+                        cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                        self.previous_frame = None
+                        self.frame_num = 0
+                        continue
+                    break
+
+                frame = cv2.resize(frame, (self.mask.shape[1], self.mask.shape[0]))
+
+                if self.frame_num % self.step == 0:
+                    self._classify_spots(frame)
+                    self.previous_frame = frame.copy()
+
+                current_time = time.time()
+                self.fps = 1.0 / (current_time - prev_time) if (current_time - prev_time) > 0 else 0.0
+                prev_time = current_time
+
+                draw_spots(frame, self.spots, self.statuses)
+                draw_counter(frame, self.statuses)
+                draw_fps(frame, self.fps)
+
+                _, jpeg = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, JPEG_QUALITY])
+                yield jpeg.tobytes()
+
+                self.frame_num += 1
+        finally:
+            cap.release()
+
+    @property
+    def stats(self):
+        """Current parking lot statistics."""
+        available = int(sum(self.statuses))
+        total = int(self.num_spots)
+        return {
+            "available": available,
+            "occupied": total - available,
+            "total": total,
+            "fps": round(float(self.fps), 1),
+        }
