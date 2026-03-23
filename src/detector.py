@@ -4,20 +4,23 @@ Holds state (spot statuses, previous frame, diffs) and
 orchestrates classification, visualization, and display.
 """
 
+import time
+
 import cv2
 import numpy as np
 
 from config import DIFF_THRESHOLD, FRAME_STEP
 from src.classifier import is_empty, load_model
 from src.spot_extractor import extract_spots, load_mask
-from src.visualizer import draw_counter, draw_spots
+from src.visualizer import draw_counter, draw_fps, draw_spots
 
 
 class ParkingDetector:
-    def __init__(self, video_path, mask_path, model_path=None, step=None):
+    def __init__(self, video_path, mask_path, model_path=None, step=None, loop=False):
         self.video_path = video_path
         self.mask_path = mask_path
         self.step = step or FRAME_STEP
+        self.loop = loop
 
         # Load resources
         self.mask = load_mask(mask_path)
@@ -62,16 +65,35 @@ class ParkingDetector:
             crop = frame[y:y + h, x:x + w]
             self.statuses[i] = is_empty(self.model, crop)
 
+    def _open_video(self):
+        """Open video source. Supports file paths and camera indices."""
+        # Try to interpret as camera index (e.g. "0", "1")
+        try:
+            source = int(self.video_path)
+        except (ValueError, TypeError):
+            source = self.video_path
+
+        cap = cv2.VideoCapture(source)
+        if not cap.isOpened():
+            raise RuntimeError(f"Cannot open video source: {self.video_path}")
+        return cap
+
     def run(self):
         """Open the video and run the detection loop."""
-        cap = cv2.VideoCapture(self.video_path)
-        if not cap.isOpened():
-            raise RuntimeError(f"Cannot open video: {self.video_path}")
+        cap = self._open_video()
+        prev_time = time.time()
+        fps = 0.0
 
         try:
             while True:
                 ret, frame = cap.read()
+
                 if not ret:
+                    if self.loop:
+                        cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                        self.previous_frame = None
+                        self.frame_num = 0
+                        continue
                     break
 
                 frame = cv2.resize(frame, (self.mask.shape[1], self.mask.shape[0]))
@@ -80,8 +102,14 @@ class ParkingDetector:
                     self._classify_spots(frame)
                     self.previous_frame = frame.copy()
 
+                # Calculate FPS
+                current_time = time.time()
+                fps = 1.0 / (current_time - prev_time) if (current_time - prev_time) > 0 else 0.0
+                prev_time = current_time
+
                 draw_spots(frame, self.spots, self.statuses)
                 draw_counter(frame, self.statuses)
+                draw_fps(frame, fps)
 
                 cv2.namedWindow("Parking Detector", cv2.WINDOW_NORMAL)
                 cv2.imshow("Parking Detector", frame)

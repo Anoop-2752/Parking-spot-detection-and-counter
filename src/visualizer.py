@@ -1,6 +1,6 @@
 """
-Drawing utilities — overlays parking spot rectangles and
-the availability counter onto video frames.
+Drawing utilities — overlays parking spot rectangles,
+the availability counter, and FPS onto video frames.
 """
 
 import cv2
@@ -36,5 +36,21 @@ def draw_counter(frame, statuses):
         cv2.FONT_HERSHEY_SIMPLEX,
         COUNTER_FONT_SCALE,
         COUNTER_COLOR,
+        2,
+    )
+
+
+def draw_fps(frame, fps):
+    """Draw FPS counter in the top-right corner."""
+    h, w = frame.shape[:2]
+    text = f"FPS: {fps:.0f}"
+    cv2.rectangle(frame, (w - 200, 20), (w - 20, 70), (0, 0, 0), -1)
+    cv2.putText(
+        frame,
+        text,
+        (w - 190, 58),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.9,
+        (0, 255, 255),
         2,
     )

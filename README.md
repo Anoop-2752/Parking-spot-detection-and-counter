@@ -76,9 +76,14 @@ python main.py
 python main.py --video path/to/video.mp4 --mask path/to/mask.png
 ```
 
-### Adjust processing frequency
+### Use webcam as source
 ```bash
-python main.py --step 15
+python main.py --source 0 --mask path/to/mask.png
+```
+
+### Loop video and adjust frame step
+```bash
+python main.py --loop --step 15
 ```
 
 ### CLI Options
@@ -86,8 +91,10 @@ python main.py --step 15
 | Flag | Description | Default |
 |------|-------------|---------|
 | `--video` | Path to input video file | `data/videos/parking_1920_1080_loop.mp4` |
+| `--source` | Camera index (0, 1) or video path (overrides `--video`) | — |
 | `--mask` | Path to binary mask image | `data/masks/mask_1920_1080.png` |
 | `--step` | Process every Nth frame | `30` |
+| `--loop` | Restart video when it ends | off |
 
 Press **`q`** to quit the video window.
 
