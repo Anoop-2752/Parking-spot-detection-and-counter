@@ -37,7 +37,8 @@ The processed video is displayed with:
 │   ├── spot_extractor.py    # Mask → bounding boxes via connected components
 │   └── visualizer.py        # Drawing rectangles & counter overlay
 ├── tools/
-│   └── crop_cars.py         # Data preparation — crop spots from video
+│   ├── crop_cars.py         # Data preparation — crop spots from video
+│   └── train_model.py       # Train the SVM classifier
 ├── data/
 │   ├── masks/               # Binary mask images
 │   └── videos/              # Input video files
@@ -98,6 +99,39 @@ To generate training data (cropped spot images) from a video:
 
 ```bash
 python -m tools.crop_cars --video path/to/video.mp4 --mask path/to/mask.png --output ./clf-data/crops/
+```
+
+---
+
+## Training the Model
+
+The training script loads images from `clf-data/empty/` and `clf-data/not_empty/`, trains an SVM classifier, and saves it to `model/model.p`.
+
+### Train with defaults
+```bash
+python -m tools.train_model
+```
+
+### Train with custom parameters
+```bash
+python -m tools.train_model --data ./clf-data --C 10 --gamma 0.01 --test-size 0.2
+```
+
+### Training Options
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--data` | Path to training data directory | `./clf-data` |
+| `--output` | Path to save trained model | `./model/model.p` |
+| `--test-size` | Fraction of data for testing | `0.2` |
+| `--C` | SVM regularization parameter | `10` |
+| `--gamma` | SVM kernel coefficient | `0.01` |
+
+The training data directory should have this structure:
+```
+clf-data/
+├── empty/          # Images of empty parking spots
+└── not_empty/      # Images of occupied parking spots
 ```
 
 ---
