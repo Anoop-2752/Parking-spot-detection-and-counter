@@ -26,8 +26,6 @@ share/python-wheels/
 *.egg
 MANIFEST
 .vscode/
-data/
-model/
 clf-data/
 # PyInstaller
 #  Usually these files are written by a python script from a template
