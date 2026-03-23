@@ -36,6 +36,11 @@ The processed video is displayed with:
 │   ├── classifier.py        # Model loading & empty/occupied prediction
 │   ├── spot_extractor.py    # Mask → bounding boxes via connected components
 │   └── visualizer.py        # Drawing rectangles & counter overlay
+├── web/
+│   ├── app.py               # Flask app with routes and MJPEG streaming
+│   └── templates/
+│       └── dashboard.html   # Web dashboard UI
+├── run_web.py               # Web dashboard entry point
 ├── tools/
 │   ├── crop_cars.py         # Data preparation — crop spots from video
 │   └── train_model.py       # Train the SVM classifier
@@ -97,6 +102,34 @@ python main.py --loop --step 15
 | `--loop` | Restart video when it ends | off |
 
 Press **`q`** to quit the video window.
+
+---
+
+## Web Dashboard
+
+A Flask-based web dashboard that streams the processed video feed with live statistics.
+
+### Launch the dashboard
+```bash
+python run_web.py
+```
+Then open **http://localhost:5000** in your browser.
+
+### Dashboard Options
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--video` | Path to input video file | `data/videos/parking_1920_1080_loop.mp4` |
+| `--mask` | Path to binary mask image | `data/masks/mask_1920_1080.png` |
+| `--step` | Process every Nth frame | `30` |
+| `--port` | Server port | `5000` |
+| `--debug` | Enable Flask debug mode | off |
+
+The dashboard features:
+- Live MJPEG video stream with bounding box overlays
+- Real-time stat cards (available, occupied, total, FPS)
+- Occupancy progress bar with color-coded thresholds
+- Responsive layout for desktop and mobile
 
 ---
 
