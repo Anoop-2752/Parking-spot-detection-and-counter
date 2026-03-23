@@ -11,11 +11,17 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_MASK_PATH = os.path.join(BASE_DIR, "data", "masks", "mask_1920_1080.png")
 DEFAULT_VIDEO_PATH = os.path.join(BASE_DIR, "data", "videos", "parking_1920_1080_loop.mp4")
 MODEL_PATH = os.path.join(BASE_DIR, "model", "model.p")
+CNN_MODEL_PATH = os.path.join(BASE_DIR, "model", "model.pth")
 
 # ── Detection parameters ──────────────────────────────────────
 FRAME_STEP = 30                # Process every Nth frame
 DIFF_THRESHOLD = 0.4           # Minimum relative diff to re-classify a spot
-CLASSIFIER_RESIZE_DIM = (15, 15, 3)   # Input size for the ML model
+CLASSIFIER_RESIZE_DIM = (15, 15, 3)   # Input size for SVM model
+
+# ── CNN configuration ─────────────────────────────────────────
+CNN_INPUT_SIZE = 64
+CNN_NORMALIZE_MEAN = [0.485, 0.456, 0.406]
+CNN_NORMALIZE_STD = [0.229, 0.224, 0.225]
 
 # ── Display ───────────────────────────────────────────────────
 COLOR_EMPTY = (0, 255, 0)      # Green

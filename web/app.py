@@ -13,12 +13,13 @@ app = Flask(__name__, template_folder="templates")
 detector = None
 
 
-def init_detector(video_path=None, mask_path=None, step=None):
+def init_detector(video_path=None, mask_path=None, model_path=None, step=None):
     """Initialize the shared detector instance."""
     global detector
     detector = ParkingDetector(
         video_path=video_path or DEFAULT_VIDEO_PATH,
         mask_path=mask_path or DEFAULT_MASK_PATH,
+        model_path=model_path,
         step=step,
         loop=True,
     )

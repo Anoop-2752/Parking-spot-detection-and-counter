@@ -18,6 +18,7 @@ def parse_args():
     parser.add_argument("--video", default=DEFAULT_VIDEO_PATH, help="Path to input video")
     parser.add_argument("--source", default=None, help="Video source — camera index (0, 1) or video path (overrides --video)")
     parser.add_argument("--mask", default=DEFAULT_MASK_PATH, help="Path to binary mask image")
+    parser.add_argument("--model", default=None, help="Path to model file (.p for SVM, .pth for CNN)")
     parser.add_argument("--step", type=int, default=None, help="Process every Nth frame")
     parser.add_argument("--loop", action="store_true", help="Loop video when it ends")
     return parser.parse_args()
@@ -30,6 +31,7 @@ def main():
     detector = ParkingDetector(
         video_path=video,
         mask_path=args.mask,
+        model_path=args.model,
         step=args.step,
         loop=args.loop,
     )

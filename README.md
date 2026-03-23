@@ -15,9 +15,12 @@ A binary **mask image** defines where each parking spot is located. OpenCV's con
 Instead of classifying every spot on every frame, the system compares the current frame against the previous one. Only spots where significant visual change is detected (above a configurable threshold) are sent to the classifier. This keeps processing efficient.
 
 ### 3. ML Classification
-Each spot crop is resized to 15x15 pixels, flattened, and fed into a pre-trained **SVM (Support Vector Machine)** classifier that predicts:
-- **Empty** (green bounding box)
-- **Occupied** (red bounding box)
+Each spot crop is classified as empty or occupied. Two model options are supported:
+
+- **CNN (default)** — A 3-layer convolutional neural network (ParkingCNN) that takes 64x64 RGB input and learns spatial features. Better generalization to new lighting/angles.
+- **SVM (legacy)** — Resizes to 15x15, flattens pixels, and classifies with an SVM. Fast but brittle to visual changes.
+
+The system auto-detects the model type (`.pth` for CNN, `.p` for SVM) — just drop in the model file and it works.
 
 ### 4. Live Display
 The processed video is displayed with:
@@ -33,7 +36,8 @@ The processed video is displayed with:
 ├── config.py                # All constants, thresholds, default paths
 ├── src/
 │   ├── detector.py          # ParkingDetector class — main detection loop
-│   ├── classifier.py        # Model loading & empty/occupied prediction
+│   ├── classifier.py        # Model loading & prediction (SVM + CNN)
+│   ├── cnn_model.py         # ParkingCNN architecture (PyTorch)
 │   ├── spot_extractor.py    # Mask → bounding boxes via connected components
 │   └── visualizer.py        # Drawing rectangles & counter overlay
 ├── web/
@@ -43,7 +47,8 @@ The processed video is displayed with:
 ├── run_web.py               # Web dashboard entry point
 ├── tools/
 │   ├── crop_cars.py         # Data preparation — crop spots from video
-│   └── train_model.py       # Train the SVM classifier
+│   ├── train_model.py       # Train the SVM classifier
+│   └── train_cnn.py         # Train the CNN classifier (PyTorch)
 ├── data/
 │   ├── masks/               # Binary mask images
 │   └── videos/              # Input video files
@@ -145,19 +150,35 @@ python -m tools.crop_cars --video path/to/video.mp4 --mask path/to/mask.png --ou
 
 ## Training the Model
 
-The training script loads images from `clf-data/empty/` and `clf-data/not_empty/`, trains an SVM classifier, and saves it to `model/model.p`.
+The training data directory should have this structure:
+```
+clf-data/
+├── empty/          # Images of empty parking spots
+└── not_empty/      # Images of occupied parking spots
+```
 
-### Train with defaults
+### CNN (recommended)
+```bash
+python -m tools.train_cnn
+python -m tools.train_cnn --epochs 30 --batch-size 32 --lr 0.001
+```
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--data` | Path to training data directory | `./clf-data` |
+| `--output` | Path to save trained model | `./model/model.pth` |
+| `--epochs` | Number of training epochs | `30` |
+| `--batch-size` | Batch size | `32` |
+| `--lr` | Learning rate | `0.001` |
+| `--test-size` | Fraction of data for testing | `0.2` |
+
+The CNN uses data augmentation (random crops, flips, rotation, color jitter) for better generalization.
+
+### SVM (legacy)
 ```bash
 python -m tools.train_model
+python -m tools.train_model --C 10 --gamma 0.01
 ```
-
-### Train with custom parameters
-```bash
-python -m tools.train_model --data ./clf-data --C 10 --gamma 0.01 --test-size 0.2
-```
-
-### Training Options
 
 | Flag | Description | Default |
 |------|-------------|---------|
@@ -167,21 +188,15 @@ python -m tools.train_model --data ./clf-data --C 10 --gamma 0.01 --test-size 0.
 | `--C` | SVM regularization parameter | `10` |
 | `--gamma` | SVM kernel coefficient | `0.01` |
 
-The training data directory should have this structure:
-```
-clf-data/
-├── empty/          # Images of empty parking spots
-└── not_empty/      # Images of occupied parking spots
-```
-
 ---
 
 ## Tech Stack
 
 - **Python** — core language
+- **PyTorch** — CNN model training and inference
 - **OpenCV** — video processing, connected components, display
-- **scikit-learn** — SVM classifier for spot classification
-- **scikit-image** — image resizing for model input
+- **Flask** — web dashboard with live MJPEG streaming
+- **scikit-learn** — SVM classifier (legacy)
 - **NumPy** — numerical operations and frame differencing
 
 ---
