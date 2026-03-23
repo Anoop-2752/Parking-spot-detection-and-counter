@@ -46,6 +46,7 @@ The processed video is displayed with:
 │       └── dashboard.html   # Web dashboard UI
 ├── run_web.py               # Web dashboard entry point
 ├── tools/
+│   ├── create_mask.py       # Interactive mask creation tool
 │   ├── crop_cars.py         # Data preparation — crop spots from video
 │   ├── train_model.py       # Train the SVM classifier
 │   └── train_cnn.py         # Train the CNN classifier (PyTorch)
@@ -70,6 +71,40 @@ The processed video is displayed with:
 git clone https://github.com/your-username/Parking-spot-detection-and-counter.git
 cd Parking-spot-detection-and-counter
 pip install -r requirements.txt
+```
+
+---
+
+## Creating a Mask for a New Parking Lot
+
+To use this system on any parking lot video, you first need a binary mask that defines where each parking spot is. The interactive mask tool makes this easy:
+
+```bash
+python -m tools.create_mask --video path/to/your_parking_lot.mp4
+```
+
+| Control | Action |
+|---------|--------|
+| **Left click** | Place a corner point of a parking spot |
+| **Right click** | Finish current spot (connects the points, min 3) |
+| **U** | Undo last spot |
+| **R** | Reset all spots |
+| **S** | Save mask and exit |
+| **Q / ESC** | Quit without saving |
+| **+/-** | Navigate frames to find a clear view |
+
+The tool generates a binary mask image (white spots on black background) that the detector uses to locate parking spots.
+
+**Full workflow for a new parking lot:**
+```bash
+# 1. Create a mask by clicking on parking spots
+python -m tools.create_mask --video new_lot.mp4 --output data/masks/new_lot_mask.png
+
+# 2. Run detection with your mask
+python main.py --video new_lot.mp4 --mask data/masks/new_lot_mask.png
+
+# 3. Or launch the web dashboard
+python run_web.py --video new_lot.mp4 --mask data/masks/new_lot_mask.png
 ```
 
 ---
